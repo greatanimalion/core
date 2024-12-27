@@ -66,7 +66,8 @@ export const hydrate = ((...args) => {
 //入口文件
 export const createApp = ((...args) => {
   const app = ensureRenderer().createApp(...args)
-  /* app返回对象
+  /* app返回对象 
+     {  
       _uid: uid++,
       _component: rootComponent as ConcreteComponent,
       _props: rootProps,

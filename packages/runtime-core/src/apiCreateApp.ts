@@ -37,7 +37,7 @@ export function createAppAPI<HostElement>(
 ): CreateAppFunction<HostElement> {
   return function createApp(rootComponent, rootProps = null/*must be an object*/) {
     if (!isFunction(rootComponent)) {
-      rootComponent = extend({}, rootComponent)
+      rootComponent = extend({}, rootComponent)//extend 就是 Object.assign
     }
     const context = createAppContext()
     const installedPlugins = new WeakSet()
@@ -125,16 +125,13 @@ export function createAppAPI<HostElement>(
       ): any {
         if (!isMounted) {
           const vnode = app._ceVNode || createVNode(rootComponent, rootProps)
-          // store app context on the root VNode.
-          // this will be set on the root instance on initial mount.
+          //在在根节点挂上context
           vnode.appContext = context
-
           if (namespace === true) {
             namespace = 'svg'
           } else if (namespace === false) {
             namespace = undefined
           }
-
           if (isHydrate && hydrate) {
             hydrate(vnode as VNode<Node, Element>, rootContainer as any)
           } else {
@@ -142,14 +139,7 @@ export function createAppAPI<HostElement>(
           }
           isMounted = true
           app._container = rootContainer
-          // for devtools and telemetry
-          (rootContainer as any).__vue_app__ = app
-
-          if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
-            app._instance = vnode.component
-            devtoolsInitApp(app, version)
-          }
-
+          
           return getComponentPublicInstance(vnode.component!)
         }
       },
