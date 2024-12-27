@@ -325,18 +325,6 @@ export function createHydrationRenderer(
   return baseCreateRenderer(options, createHydrationFunctions)
 }
 
-// overload 1: no hydration
-function baseCreateRenderer<
-  HostNode = RendererNode,
-  HostElement = RendererElement,
->(options: RendererOptions<HostNode, HostElement>): Renderer<HostElement>
-
-// overload 2: with hydration
-function baseCreateRenderer(
-  options: RendererOptions<Node, Element>,
-  createHydrationFns: typeof createHydrationFunctions,
-): HydrationRenderer
-
 // implementation
 function baseCreateRenderer(
   options: RendererOptions,
@@ -536,33 +524,6 @@ function baseCreateRenderer(
       n2.el,
       n2.anchor,
     )
-  }
-
-  /**
-   * Dev / HMR only
-   */
-  const patchStaticNode = (
-    n1: VNode,
-    n2: VNode,
-    container: RendererElement,
-    namespace: ElementNamespace,
-  ) => {
-    // static nodes are only patched during dev for HMR
-    if (n2.children !== n1.children) {
-      const anchor = hostNextSibling(n1.anchor!)
-      // remove existing
-      removeStaticNode(n1)
-      // insert new
-      ;[n2.el, n2.anchor] = hostInsertStaticContent!(
-        n2.children as string,
-        container,
-        anchor,
-        namespace,
-      )
-    } else {
-      n2.el = n1.el
-      n2.anchor = n1.anchor
-    }
   }
 
   const moveStaticNode = (
@@ -806,9 +767,6 @@ function baseCreateRenderer(
     optimized: boolean,
   ) => {
     const el = (n2.el = n1.el!)
-    if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) {
-      el.__vnode = n2
-    }
     let { patchFlag, dynamicChildren, dirs } = n2
     // #1426 take the old vnode's patch flag into account since user may clone a
     // compiler-generated vnode, which de-opts to FULL_PROPS
