@@ -12,60 +12,22 @@ import {
   normalizeClass,
   normalizeStyle,
 } from '@vue/shared'
-import {
-  type ClassComponent,
-  type Component,
-  type ComponentInternalInstance,
-  type ConcreteComponent,
-  type Data,
-  isClassComponent,
-} from './component'
-import type { RawSlots } from './componentSlots'
-import {
-  type ReactiveFlags,
-  type Ref,
-  isProxy,
-  isRef,
-  toRaw,
-} from '@vue/reactivity'
-import type { AppContext } from './apiCreateApp'
-import {
-  type Suspense,
-  type SuspenseBoundary,
-  type SuspenseImpl,
-  isSuspense,
-} from './components/Suspense'
-import type { DirectiveBinding } from './directives'
-import {
-  type TransitionHooks,
-  setTransitionHooks,
-} from './components/BaseTransition'
+import {isClassComponent,} from './component'
+import {isProxy,isRef,toRaw,} from '@vue/reactivity'
+import {isSuspense,} from './components/Suspense'
+import {setTransitionHooks,} from './components/BaseTransition'
 import { warn } from './warning'
-import {
-  type Teleport,
-  type TeleportImpl,
-  isTeleport,
-} from './components/Teleport'
-import {
-  currentRenderingInstance,
-  currentScopeId,
-} from './componentRenderContext'
-import type { RendererElement, RendererNode } from './renderer'
+import {isTeleport,} from './components/Teleport'
+import {currentRenderingInstance,currentScopeId,} from './componentRenderContext'
 import { NULL_DYNAMIC_COMPONENT } from './helpers/resolveAssets'
 import { hmrDirtyComponents } from './hmr'
 import { convertLegacyComponent } from './compat/component'
 import { convertLegacyVModelProps } from './compat/componentVModel'
 import { defineLegacyVNodeProperties } from './compat/renderFn'
 import { ErrorCodes, callWithAsyncErrorHandling } from './errorHandling'
-import type { ComponentPublicInstance } from './componentPublicInstance'
 import { isInternalObject } from './internalObject'
 
-export const Fragment = Symbol.for('v-fgt') as any as {
-  __isFragment: true
-  new (): {
-    $props: VNodeProps
-  }
-}
+export const Fragment = Symbol.for('v-fgt') 
 export const Text: unique symbol = Symbol.for('v-txt')
 export const Comment: unique symbol = Symbol.for('v-cmt')
 export const Static: unique symbol = Symbol.for('v-stc')
@@ -83,52 +45,11 @@ export type VNodeTypes =
   | typeof Suspense
   | typeof SuspenseImpl
 
-export type VNodeRef =
-  | string
-  | Ref
-  | ((
-      ref: Element | ComponentPublicInstance | null,
-      refs: Record<string, any>,
-    ) => void)
-
-export type VNodeNormalizedRefAtom = {
-  /**
-   * component instance
-   */
-  i: ComponentInternalInstance
-  /**
-   * Actual ref
-   */
-  r: VNodeRef
-  /**
-   * setup ref key
-   */
-  k?: string
-  /**
-   * refInFor marker
-   */
-  f?: boolean
-}
-
-export type VNodeNormalizedRef =
-  | VNodeNormalizedRefAtom
-  | VNodeNormalizedRefAtom[]
-
-type VNodeMountHook = (vnode: VNode) => void
-type VNodeUpdateHook = (vnode: VNode, oldVNode: VNode) => void
-export type VNodeHook =
-  | VNodeMountHook
-  | VNodeUpdateHook
-  | VNodeMountHook[]
-  | VNodeUpdateHook[]
-
-// https://github.com/microsoft/TypeScript/issues/33099
 export type VNodeProps = {
   key?: PropertyKey
   ref?: VNodeRef
   ref_for?: boolean
   ref_key?: string
-
   // vnode hooks
   onVnodeBeforeMount?: VNodeMountHook | VNodeMountHook[]
   onVnodeMounted?: VNodeMountHook | VNodeMountHook[]
@@ -138,147 +59,51 @@ export type VNodeProps = {
   onVnodeUnmounted?: VNodeMountHook | VNodeMountHook[]
 }
 
-type VNodeChildAtom =
-  | VNode
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | void
-
-export type VNodeArrayChildren = Array<VNodeArrayChildren | VNodeChildAtom>
-
-export type VNodeChild = VNodeChildAtom | VNodeArrayChildren
-
-export type VNodeNormalizedChildren =
-  | string
-  | VNodeArrayChildren
-  | RawSlots
-  | null
 
 export interface VNode<
   HostNode = RendererNode,
   HostElement = RendererElement,
   ExtraProps = { [key: string]: any },
 > {
-  /**
-   * @internal
-   */
   __v_isVNode: true
-
-  /**
-   * @internal
-   */
   [ReactiveFlags.SKIP]: true
-
   type: VNodeTypes
   props: (VNodeProps & ExtraProps) | null
   key: PropertyKey | null
   ref: VNodeNormalizedRef | null
-  /**
-   * SFC only. This is assigned on vnode creation using currentScopeId
-   * which is set alongside currentRenderingInstance.
-   */
+  //仅单文件组件
   scopeId: string | null
-  /**
-   * SFC only. This is assigned to:
-   * - Slot fragment vnodes with :slotted SFC styles.
-   * - Component vnodes (during patch/hydration) so that its root node can
-   *   inherit the component's slotScopeIds
-   * @internal
-   */
   slotScopeIds: string[] | null
   children: VNodeNormalizedChildren
   component: ComponentInternalInstance | null
   dirs: DirectiveBinding[] | null
   transition: TransitionHooks<HostElement> | null
-
   // DOM
   el: HostNode | null
   anchor: HostNode | null // fragment anchor
   target: HostElement | null // teleport target
   targetStart: HostNode | null // teleport target start anchor
   targetAnchor: HostNode | null // teleport target anchor
-  /**
-   * number of elements contained in a static vnode
-   * @internal
-   */
-  staticCount: number
-
+  staticCount: number  //静态vnode点的数量
   // suspense
   suspense: SuspenseBoundary | null
-  /**
-   * @internal
-   */
   ssContent: VNode | null
-  /**
-   * @internal
-   */
   ssFallback: VNode | null
-
   // optimization only
   shapeFlag: number
   patchFlag: number
-  /**
-   * @internal
-   */
   dynamicProps: string[] | null
-  /**
-   * @internal
-   */
   dynamicChildren: (VNode[] & { hasOnce?: boolean }) | null
-
-  // application root node only
-  appContext: AppContext | null
-
-  /**
-   * @internal lexical scope owner instance
-   */
+  appContext: AppContext | null//仅根节点
   ctx: ComponentInternalInstance | null
-
-  /**
-   * @internal attached by v-memo
-   */
-  memo?: any[]
-  /**
-   * @internal index for cleaning v-memo cache
-   */
-  cacheIndex?: number
-  /**
-   * @internal __COMPAT__ only
-   */
-  isCompatRoot?: true
-  /**
-   * @internal custom element interception hook
-   */
-  ce?: (instance: ComponentInternalInstance) => void
+  cacheIndex?: number//index for cleaning v-memo cache
+  isCompatRoot?: true//__COMPAT__ only
+  ce?: (instance: ComponentInternalInstance) => void//自定义组件的拦截 hook
 }
 
-// Since v-if and v-for are the two possible ways node structure can dynamically
-// change, once we consider v-if branches and each v-for fragment a block, we
-// can divide a template into nested blocks, and within each block the node
-// structure would be stable. This allows us to skip most children diffing
-// and only worry about the dynamic nodes (indicated by patch flags).
 export const blockStack: VNode['dynamicChildren'][] = []
 export let currentBlock: VNode['dynamicChildren'] = null
-
-/**
- * Open a block.
- * This must be called before `createBlock`. It cannot be part of `createBlock`
- * because the children of the block are evaluated before `createBlock` itself
- * is called. The generated code typically looks like this:
- *
- * ```js
- * function render() {
- *   return (openBlock(),createBlock('div', null, [...]))
- * }
- * ```
- * disableTracking is true when creating a v-for fragment block, since a v-for
- * fragment always diffs its children.
- *
- * @private
- */
+ 
 export function openBlock(disableTracking = false): void {
   blockStack.push((currentBlock = disableTracking ? null : []))
 }
@@ -288,54 +113,24 @@ export function closeBlock(): void {
   currentBlock = blockStack[blockStack.length - 1] || null
 }
 
-// Whether we should be tracking dynamic child nodes inside a block.
-// Only tracks when this value is > 0
-// We are not using a simple boolean because this value may need to be
-// incremented/decremented by nested usage of v-once (see below)
 export let isBlockTreeEnabled = 1
-
-/**
- * Block tracking sometimes needs to be disabled, for example during the
- * creation of a tree that needs to be cached by v-once. The compiler generates
- * code like this:
- *
- * ``` js
- * _cache[1] || (
- *   setBlockTracking(-1, true),
- *   _cache[1] = createVNode(...),
- *   setBlockTracking(1),
- *   _cache[1]
- * )
- * ```
- *
- * @private
- */
 export function setBlockTracking(value: number, inVOnce = false): void {
   isBlockTreeEnabled += value
   if (value < 0 && currentBlock && inVOnce) {
-    // mark current block so it doesn't take fast path and skip possible
-    // nested components during unmount
-    currentBlock.hasOnce = true
+    currentBlock.hasOnce = true//标记当前块，使其不采用快速路径和跳过卸载期间的嵌套组件
   }
 }
 
-function setupBlock(vnode: VNode) {
-  // save current block children on the block vnode
-  vnode.dynamicChildren =
-    isBlockTreeEnabled > 0 ? currentBlock || (EMPTY_ARR as any) : null
-  // close block
+function setupBlock(vnode: VNode) { 保存当前block的block children
+  vnode.dynamicChildren =isBlockTreeEnabled > 0 ? currentBlock || (EMPTY_ARR as any) : null
   closeBlock()
-  // a block is always going to be patched, so track it as a child of its
-  // parent block
+  //一个块总是会被修补的，所以把它作为它的父块
   if (isBlockTreeEnabled > 0 && currentBlock) {
     currentBlock.push(vnode)
   }
   return vnode
 }
 
-/**
- * @private
- */
 export function createElementBlock(
   type: string | typeof Fragment,
   props?: Record<string, any> | null,
@@ -357,13 +152,6 @@ export function createElementBlock(
   )
 }
 
-/**
- * Create a block root vnode. Takes the same exact arguments as `createVNode`.
- * A block root keeps track of dynamic nodes within the block in the
- * `dynamicChildren` array.
- *
- * @private
- */
 export function createBlock(
   type: VNodeTypes | ClassComponent,
   props?: Record<string, any> | null,
@@ -388,17 +176,6 @@ export function isVNode(value: any): value is VNode {
 }
 
 export function isSameVNodeType(n1: VNode, n2: VNode): boolean {
-  if (__DEV__ && n2.shapeFlag & ShapeFlags.COMPONENT && n1.component) {
-    const dirtyInstances = hmrDirtyComponents.get(n2.type as ConcreteComponent)
-    if (dirtyInstances && dirtyInstances.has(n1.component)) {
-      // #7042, ensure the vnode being unmounted during HMR
-      // bitwise operations to remove keep alive flags
-      n1.shapeFlag &= ~ShapeFlags.COMPONENT_SHOULD_KEEP_ALIVE
-      n2.shapeFlag &= ~ShapeFlags.COMPONENT_KEPT_ALIVE
-      // HMR only: if the component has been hot-updated, force a reload.
-      return false
-    }
-  }
   return n1.type === n2.type && n1.key === n2.key
 }
 
@@ -409,26 +186,10 @@ let vnodeArgsTransformer:
     ) => Parameters<typeof _createVNode>)
   | undefined
 
-/**
- * Internal API for registering an arguments transform for createVNode
- * used for creating stubs in the test-utils
- * It is *internal* but needs to be exposed for test-utils to pick up proper
- * typings
- */
 export function transformVNodeArgs(
   transformer?: typeof vnodeArgsTransformer,
 ): void {
   vnodeArgsTransformer = transformer
-}
-
-const createVNodeWithArgsTransform = (
-  ...args: Parameters<typeof _createVNode>
-): VNode => {
-  return _createVNode(
-    ...(vnodeArgsTransformer
-      ? vnodeArgsTransformer(args, currentRenderingInstance)
-      : args),
-  )
 }
 
 const normalizeKey = ({ key }: VNodeProps): VNode['key'] =>
@@ -539,9 +300,7 @@ function createBaseVNode(
 
 export { createBaseVNode as createElementVNode }
 
-export const createVNode = (
-  __DEV__ ? createVNodeWithArgsTransform : _createVNode
-) as typeof _createVNode
+export const createVNode =_createVNode as typeof _createVNode
 
 function _createVNode(
   type: VNodeTypes | ClassComponent | typeof NULL_DYNAMIC_COMPONENT,
@@ -734,47 +493,21 @@ export function cloneVNode<T, U>(
   return cloned
 }
 
-/**
- * Dev only, for HMR of hoisted vnodes reused in v-for
- * https://github.com/vitejs/vite/issues/2022
- */
-function deepCloneVNode(vnode: VNode): VNode {
-  const cloned = cloneVNode(vnode)
-  if (isArray(vnode.children)) {
-    cloned.children = (vnode.children as VNode[]).map(deepCloneVNode)
-  }
-  return cloned
-}
-
-/**
- * @private
- */
 export function createTextVNode(text: string = ' ', flag: number = 0): VNode {
   return createVNode(Text, null, text, flag)
 }
-
-/**
- * @private
- */
 export function createStaticVNode(
   content: string,
   numberOfNodes: number,
 ): VNode {
-  // A static vnode can contain multiple stringified elements, and the number
-  // of elements is necessary for hydration.
-  const vnode = createVNode(Static, null, content)
+  const vnode = createVNode(Static, null, content)//静态 vnode 可以包含多个字符串化元素，并且元素是水合作用所必需的。
   vnode.staticCount = numberOfNodes
   return vnode
 }
 
-/**
- * @private
- */
 export function createCommentVNode(
   text: string = '',
-  // when used as the v-else branch, the comment node must be created as a
-  // block to ensure correct updates.
-  asBlock: boolean = false,
+  asBlock: boolean = false,//当使用v-else分支时，为了确保正确更新，这个comment节点必须作为一个block创建
 ): VNode {
   return asBlock
     ? (openBlock(), createBlock(Comment, null, text))
@@ -783,23 +516,17 @@ export function createCommentVNode(
 
 export function normalizeVNode(child: VNodeChild): VNode {
   if (child == null || typeof child === 'boolean') {
-    // empty placeholder
-    return createVNode(Comment)
+    return createVNode(Comment)//空占位
   } else if (isArray(child)) {
-    // fragment
     return createVNode(
       Fragment,
       null,
-      // #3666, avoid reference pollution when reusing vnode
-      child.slice(),
+      child.slice(), // 避免再使用时的引用污染
     )
   } else if (isVNode(child)) {
-    // already vnode, this should be the most common since compiled templates
-    // always produce all-vnode children arrays
     return cloneIfMounted(child)
   } else {
-    // strings and numbers
-    return createVNode(Text, null, String(child))
+    return createVNode(Text, null, String(child))//字符或数字
   }
 }
 

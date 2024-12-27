@@ -121,12 +121,11 @@ export function createAppAPI<HostElement>(
       mount(
         rootContainer: HostElement,
         isHydrate?: boolean,
-        namespace?: boolean | ElementNamespace,
+        namespace?: boolean | ElementNamespace,//这个主要判断是否是svg标签，若是，则其子标签也是svg后代
       ): any {
-        if (!isMounted) {
+        if (!isMounted) {//mount 只会在app挂在时执行一次
           const vnode = app._ceVNode || createVNode(rootComponent, rootProps)
-          //在在根节点挂上context
-          vnode.appContext = context
+          vnode.appContext = context //在在根节点挂上context
           if (namespace === true) {
             namespace = 'svg'
           } else if (namespace === false) {
@@ -139,11 +138,9 @@ export function createAppAPI<HostElement>(
           }
           isMounted = true
           app._container = rootContainer
-          
           return getComponentPublicInstance(vnode.component!)
         }
       },
-
       onUnmount(cleanupFn: () => void) {
         if (__DEV__ && typeof cleanupFn !== 'function') {
           warn(
