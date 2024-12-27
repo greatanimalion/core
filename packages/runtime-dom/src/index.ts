@@ -1,14 +1,5 @@
 import {
-  type App,
-  type CreateAppFunction,
-  type DefineComponent,
   DeprecationTypes,
-  type Directive,
-  type ElementNamespace,
-  type HydrationRenderer,
-  type Renderer,
-  type RootHydrateFunction,
-  type RootRenderFunction,
   compatUtils,
   createHydrationRenderer,
   createRenderer,
@@ -63,7 +54,7 @@ function ensureHydrationRenderer() {
   return renderer as HydrationRenderer
 }
 
-// use explicit type casts here to avoid import() calls in rolled-up d.ts
+// 显示转换 to avoid import() calls in rolled-up d.ts
 export const render = ((...args) => {
   ensureRenderer().render(...args)
 }) as RootRenderFunction<Element | ShadowRoot>
@@ -166,11 +157,6 @@ function normalizeContainer(
 ): Element | ShadowRoot | null {
   if (isString(container)) {
     const res = document.querySelector(container)
-    if (__DEV__ && !res) {
-      warn(
-        `Failed to mount app: mount target selector "${container}" returned null.`,
-      )
-    }
     return res
   }
   if (
@@ -193,8 +179,6 @@ export {
   useShadowRoot,
   useHost,
   VueElement,
-  type VueElementConstructor,
-  type CustomElementOptions,
 } from './apiCustomElement'
 
 // SFC CSS utilities
